@@ -1,4 +1,5 @@
 import streamlit as st
+import tensorflow as tf  # <--- WAJIB ADA AGAR MODEL BISA JALAN
 import numpy as np
 import json
 from PIL import Image
@@ -7,13 +8,13 @@ from PIL import Image
 st.set_page_config(page_title="Klasifikasi Buah UAS", layout="centered")
 st.title("🍎 Klasifikasi Buah & Sayur")
 
-# 1. Load Label (Pastikan nama file JSON sama persis dengan di GitHub)
+# 1. Load Label
 @st.cache_data
 def load_labels():
     with open('klasifikasi class name.json.json', 'r') as f:
         return json.load(f)
 
-# 2. Load Model (Pastikan nama file .h5 sama persis dengan di GitHub)
+# 2. Load Model
 @st.cache_resource
 def load_model():
     return tf.keras.models.load_model('mobilenetv2_fruits360_optimized.h5')
@@ -30,11 +31,10 @@ except Exception as e:
 uploaded_file = st.file_uploader("Pilih gambar buah...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+    image = Image.open(uploaded_file).convert('RGB') # Convert ke RGB agar tidak error jika upload PNG transparan
     st.image(image, caption='Gambar yang diunggah', use_column_width=True)
     
     # Preprocessing
-    # Catatan: MobileNetV2 biasanya menggunakan input 224x224
     img = image.resize((224, 224))
     img_array = tf.keras.preprocessing.image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0) / 255.0
@@ -49,4 +49,3 @@ if uploaded_file is not None:
         
         st.subheader(f"Hasil: {nama_buah}")
         st.write(f"Tingkat Keyakinan: {confidence:.2f}%")
-
