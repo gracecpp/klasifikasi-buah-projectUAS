@@ -4,53 +4,49 @@ import numpy as np
 import json
 from PIL import Image
 
-# Pengaturan Halaman
-st.set_page_config(page_title="Klasifikasi Buah & Sayur", layout="centered")
+# Judul Aplikasi
+st.set_page_config(page_title="Klasifikasi Buah UAS", layout="centered")
+st.title("🍎 Klasifikasi Buah & Sayur")
 
-# 1. Load Data Label dari JSON
+# 1. Load Label (Pastikan nama file JSON sama persis dengan di GitHub)
 @st.cache_data
 def load_labels():
     with open('klasifikasi class name.json.json', 'r') as f:
         return json.load(f)
 
-# 2. Load Model AI (Ganti 'model_anda.h5' dengan nama file model Anda)
+# 2. Load Model (Pastikan nama file .h5 sama persis dengan di GitHub)
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model('model_anda.h5')
+    return tf.keras.models.load_model('mobilenetv2_fruits360_optimized.h5')
 
 # Eksekusi Load
-labels = load_labels()
 try:
+    labels = load_labels()
     model = load_model()
-    model_loaded = True
-except:
-    model_loaded = False
-    st.error("File model (.h5) tidak ditemukan! Pastikan file model ada di folder yang sama.")
+    st.success("Model dan Label berhasil dimuat!")
+except Exception as e:
+    st.error(f"Gagal memuat file: {e}")
 
-# 3. Antarmuka Pengguna (UI)
-st.title("🍎 Klasifikasi Buah & Sayur")
-st.write("Sistem Identifikasi Gambar menggunakan Deep Learning")
+# 3. Antarmuka Unggah Gambar
+uploaded_file = st.file_uploader("Pilih gambar buah...", type=["jpg", "jpeg", "png"])
 
-uploaded_file = st.file_uploader("Unggah foto buah/sayur...", type=["jpg", "png", "jpeg"])
-
-if uploaded_file is not None and model_loaded:
+if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption='Gambar yang diunggah', use_column_width=True)
     
-    # Pre-processing Gambar
-    # Catatan: Sesuaikan (224, 224) dengan input_shape model Anda saat training
-    img_resized = image.resize((224, 224)) 
-    img_array = tf.keras.preprocessing.image.img_to_array(img_resized)
+    # Preprocessing
+    # Catatan: MobileNetV2 biasanya menggunakan input 224x224
+    img = image.resize((224, 224))
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-    # Prediksi
-    if st.button('Mulai Klasifikasi'):
+    if st.button('Prediksi'):
         predictions = model.predict(img_array)
-        class_idx = str(np.argmax(predictions[0])) # Ambil index tertinggi sebagai string
+        class_id = str(np.argmax(predictions[0]))
         confidence = np.max(predictions[0]) * 100
         
-        # Ambil nama dari JSON berdasarkan key index
-        nama_produk = labels.get(class_idx, "Label tidak ditemukan")
-
-        st.success(f"Hasil: **{nama_produk}**")
-        st.info(f"Tingkat Keyakinan: {confidence:.2f}%")
+        # Ambil nama dari JSON
+        nama_buah = labels.get(class_id, "Tidak Diketahui")
+        
+        st.subheader(f"Hasil: {nama_buah}")
+        st.write(f"Tingkat Keyakinan: {confidence:.2f}%")
