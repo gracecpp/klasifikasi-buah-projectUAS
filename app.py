@@ -42,7 +42,7 @@ if uploaded_file is not None:
         with st.spinner('Sedang menganalisis...'):
             # --- 3. SOLUSI VALUEERROR (BARIS 59) ---
             # Mengubah ukuran menjadi 100x100 agar sesuai dengan input model Fruits-360
-            img_resized = image.resize((100, 100)) 
+            img_resized = image.resize((244, 244)) 
             img_array = tf.keras.preprocessing.image.img_to_array(img_resized)
             
             # Menambah dimensi batch sehingga menjadi (1, 100, 100, 3)
@@ -66,3 +66,4 @@ if uploaded_file is not None:
                 
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat prediksi: {e}")
+
