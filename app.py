@@ -2,7 +2,6 @@ import streamlit as st
 import numpy as np
 import json
 from PIL import Image
-import tflite_runtime.interpreter as tflite # Library pengganti TF yang sangat ringan
 
 st.set_page_config(page_title="Klasifikasi Buah UAS", layout="centered")
 st.title("🍎 Klasifikasi Buah & Sayur (Lite)")
@@ -52,3 +51,4 @@ if uploaded_file is not None:
         
         nama_buah = labels.get(class_id, "Tidak Diketahui")
         st.subheader(f"Hasil: {nama_buah}")
+
