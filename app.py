@@ -50,7 +50,7 @@ if uploaded_file is not None and status_load:
         with st.spinner('Sedang menganalisis gambar...'):
             # --- 4. PRE-PROCESSING GAMBAR ---
             # Menyesuaikan gambar dengan input MobileNetV2 (224x224)
-            img_resized = image.resize((224, 224))
+            img_resized = image.resize((100, 100))
             img_array = tf.keras.preprocessing.image.img_to_array(img_resized)
             img_array = np.expand_dims(img_array, axis=0)
             img_array = img_array / 255.0  # Normalisasi pixel
@@ -76,3 +76,4 @@ if uploaded_file is not None and status_load:
 
 st.divider()
 st.caption("UAS Project - Klasifikasi Buah 2024")
+
