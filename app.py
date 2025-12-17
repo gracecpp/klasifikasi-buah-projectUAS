@@ -1,5 +1,4 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 import json
 from PIL import Image
@@ -50,3 +49,4 @@ if uploaded_file is not None:
         
         st.subheader(f"Hasil: {nama_buah}")
         st.write(f"Tingkat Keyakinan: {confidence:.2f}%")
+
