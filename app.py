@@ -11,7 +11,7 @@ st.title("🍎 Klasifikasi Buah & Sayur")
 # 1. Load Label
 @st.cache_data
 def load_labels():
-    with open('klasifikasi class name.json.json', 'r') as f:
+    with open('klasifikasi class name.json', 'r') as f:
         return json.load(f)
 
 # 2. Load Model
@@ -49,3 +49,4 @@ if uploaded_file is not None:
         
         st.subheader(f"Hasil: {nama_buah}")
         st.write(f"Tingkat Keyakinan: {confidence:.2f}%")
+
