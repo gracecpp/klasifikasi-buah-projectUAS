@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import json
 from PIL import Image
-import tflite_runtime.interpreter as tflite
+
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="Klasifikasi Buah UAS", layout="centered")
@@ -55,3 +55,4 @@ if uploaded_file is not None:
         
         st.subheader(f"Hasil: {nama_hasil}")
         st.write(f"Keyakinan: {confidence:.2f}%")
+
