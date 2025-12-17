@@ -1,58 +1,78 @@
 import streamlit as st
+import tensorflow as tf
 import numpy as np
 import json
 from PIL import Image
 
+# --- 1. KONFIGURASI HALAMAN ---
+st.set_page_config(
+    page_title="Klasifikasi Buah UAS",
+    page_icon="🍎",
+    layout="centered"
+)
 
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Klasifikasi Buah UAS", layout="centered")
-st.title("🍎 Klasifikasi Buah & Sayur (Lite Version)")
-
-# --- LOAD LABEL & MODEL ---
+# --- 2. FUNGSI LOAD MODEL & LABEL (DENGAN CACHE) ---
 @st.cache_resource
-def load_resources():
+def load_all_resources():
+    # Load Model .h5
+    # Pastikan nama file ini sama persis dengan yang ada di GitHub Anda
+    model = tf.keras.models.load_model('mobilenetv2_fruits360_optimized.h5')
+    
     # Load Label JSON
     with open('klasifikasi class name.json', 'r') as f:
         labels = json.load(f)
-    
-    # Load Model TFLite (Pastikan Anda sudah upload file .tflite)
-    interpreter = tflite.Interpreter(model_path="model_buah.tflite")
-    interpreter.allocate_tensors()
-    return interpreter, labels
+        
+    return model, labels
 
+# Menjalankan fungsi load dan menangani error jika file tidak ditemukan
 try:
-    interpreter, labels = load_resources()
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-    st.success("✅ Model Lite & Label Siap!")
+    model, labels = load_all_resources()
+    status_load = True
 except Exception as e:
-    st.error(f"❌ Error: {e}. Pastikan file .tflite dan .json sudah benar.")
-    st.stop()
+    st.error(f"❌ Gagal memuat file! Pastikan file .h5 dan .json sudah di-upload. Error: {e}")
+    status_load = False
 
-# --- UI UPLOAD ---
-uploaded_file = st.file_uploader("Pilih gambar...", type=["jpg", "jpeg", "png"])
+# --- 3. ANTARMUKA PENGGUNA (UI) ---
+st.title("🍎 Klasifikasi Buah & Sayur")
+st.write("Aplikasi ini menggunakan Model MobileNetV2 untuk mengenali 131 jenis buah/sayur.")
+st.divider()
 
-if uploaded_file is not None:
+# Komponen Unggah Gambar
+uploaded_file = st.file_uploader("Pilih gambar dari perangkat Anda...", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None and status_load:
+    # Menampilkan Gambar yang di-upload
     image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Gambar Terpilih', use_container_width=True)
+    st.image(image, caption='Gambar yang diunggah', use_column_width=True)
     
-    if st.button('Mulai Prediksi'):
-        # 1. Preprocessing (Tanpa TF)
-        img = image.resize((224, 224))
-        img_array = np.array(img, dtype=np.float32)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+    # Tombol Prediksi
+    if st.button('Mulai Klasifikasi'):
+        with st.spinner('Sedang menganalisis gambar...'):
+            # --- 4. PRE-PROCESSING GAMBAR ---
+            # Menyesuaikan gambar dengan input MobileNetV2 (224x224)
+            img_resized = image.resize((224, 224))
+            img_array = tf.keras.preprocessing.image.img_to_array(img_resized)
+            img_array = np.expand_dims(img_array, axis=0)
+            img_array = img_array / 255.0  # Normalisasi pixel
 
-        # 2. Jalankan Prediksi TFLite
-        interpreter.set_tensor(input_details[0]['index'], img_array)
-        interpreter.invoke()
-        
-        # 3. Ambil Hasil
-        output_data = interpreter.get_tensor(output_details[0]['index'])
-        class_id = str(np.argmax(output_data[0]))
-        confidence = np.max(output_data[0]) * 100
-        
-        nama_hasil = labels.get(class_id, "Kategori Tidak Dikenal")
-        
-        st.subheader(f"Hasil: {nama_hasil}")
-        st.write(f"Keyakinan: {confidence:.2f}%")
+            # --- 5. PROSES PREDIKSI ---
+            predictions = model.predict(img_array)
+            
+            # Mengambil index dengan probabilitas tertinggi
+            class_index = np.argmax(predictions[0])
+            confidence = np.max(predictions[0]) * 100
+            
+            # Mengambil nama label dari JSON berdasarkan index (string)
+            class_id_str = str(class_index)
+            nama_hasil = labels.get(class_id_str, "Kategori Tidak Diketahui")
 
+            # --- 6. TAMPILKAN HASIL ---
+            st.success(f"### Hasil Prediksi: **{nama_hasil}**")
+            st.write(f"Tingkat Keyakinan AI: **{confidence:.2f}%**")
+            
+            # Memberikan info tambahan jika akurasi rendah
+            if confidence < 60:
+                st.warning("⚠️ Hasil mungkin kurang akurat. Pastikan gambar jelas dan fokus pada objek.")
+
+st.divider()
+st.caption("UAS Project - Klasifikasi Buah 2024")
