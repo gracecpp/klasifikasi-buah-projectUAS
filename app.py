@@ -1,5 +1,4 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 import json
 from PIL import Image
@@ -52,3 +51,4 @@ if uploaded_file is not None:
             
             st.success(f"### Hasil: {nama_buah}")
             st.info(f"Tingkat Keyakinan: {confidence:.2f}%")
+
